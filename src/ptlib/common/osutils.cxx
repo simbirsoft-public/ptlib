@@ -2323,14 +2323,12 @@ PThread * PThread::Create(const PNotifier & notifier,
                           const PString & threadName,
                           PINDEX stackSize)
 {
-  PThread * thread = new PSimpleThread(notifier,
-                                       parameter,
-                                       deletion,
-                                       priorityLevel,
-                                       threadName,
-                                       stackSize);
-  if (deletion != AutoDeleteThread)
-    return thread;
+    PThread * thread = new PSimpleThread(notifier,
+                                         parameter,
+                                         deletion,
+                                         priorityLevel,
+                                         threadName,
+                                         stackSize);
 
     if (deletion != AutoDeleteThread)
     {
@@ -2342,7 +2340,6 @@ PThread * PThread::Create(const PNotifier & notifier,
     // from now on so using the pointer could crash the program.
     return NULL;
 }
-
 
 PThread::~PThread()
 {
