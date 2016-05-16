@@ -341,19 +341,23 @@ class PThread : public PObject
       */
     static PThread * Create(
       const PNotifier & notifier,     ///< Function to execute in thread.
-      INT parameter = 0,              ///< Parameter value to pass to notifier.
+      P_INT_PTR parameter = 0,              ///< Parameter value to pass to notifier.
       AutoDeleteFlag deletion = AutoDeleteThread,
         ///< Automatically delete PThread instance on termination of thread.
       Priority priorityLevel = NormalPriority,  ///< Initial priority of thread.
       const PString & threadName = PString::Empty(), ///< The name of the thread (for Debug/Trace)
       PINDEX stackSize = 0            ///< Stack size on some platforms, 0 == default
     );
+
     static PThread * Create(
       const PNotifier & notifier,     ///< Function to execute in thread.
       const PString & threadName      ///< The name of the thread (for Debug/Trace)
-    ) { return Create(notifier, 0, NoAutoDeleteThread, NormalPriority, threadName); }
+    )
+    {
+        return Create(notifier, 0, NoAutoDeleteThread, NormalPriority, threadName);
+    }
   //@}
-  
+
     bool IsAutoDelete() const { return m_type == e_IsAutoDelete || m_type == e_IsExternal; }
 
     /// Thread local storage base class, see PThreadLocalStorage for template.
