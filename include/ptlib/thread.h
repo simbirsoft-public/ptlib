@@ -423,40 +423,6 @@ class PThread : public PObject
   */
 
 /*
-   This class automates calling a global function with no arguments within it's own thread.
-   It is used as follows:
-
-   void GlobalFunction()
-   {
-   }
-
-   ...
-   PString arg;
-   new PThreadMain(&GlobalFunction)
- */
-class PThreadMain : public PThread
-{
-    PCLASSINFO(PThreadMain, PThread);
-  public:
-    typedef void (*FnType)(); 
-    PThreadMain(FnType function, bool autoDel = false)
-      : PThread(10000, autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread)
-      , m_function(function)
-    {
-      PThread::Resume();
-    }
-
-    virtual void Main()
-    {
-      (*m_function)();
-    }
-
-  protected:
-    FnType m_function;
-};
-
-
-/*
    This template automates calling a global function using a functor
    It is used as follows:
 
@@ -477,7 +443,6 @@ class PThreadFunctor : public PThread
       : PThread(10000, autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread)
       , m_funct(funct)
     {
-      PThread::Resume();
     }
 
     virtual void Main()
@@ -487,141 +452,6 @@ class PThreadFunctor : public PThread
 
   protected:
     Functor & m_funct;
-};
-
-
-/*
-   This template automates calling a global function with one argument within it's own thread.
-   It is used as follows:
-
-   void GlobalFunction(PString arg)
-   {
-   }
-
-   ...
-   PString arg;
-   new PThread1Arg<PString>(arg, &GlobalFunction)
- */
-template<typename Arg1Type>
-class PThread1Arg : public PThread
-{
-    PCLASSINFO(PThread1Arg, PThread);
-  public:
-    typedef void (*FnType)(Arg1Type arg1);
-
-    PThread1Arg(
-      Arg1Type arg1,
-      FnType function,
-      bool autoDel = false,
-      const char * name = NULL,
-      PThread::Priority priority = PThread::NormalPriority
-    ) : PThread(10000, autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread, priority, name)
-      , m_function(function)
-      , m_arg1(arg1)
-    {
-      PThread::Resume();
-    }
-
-    virtual void Main()
-    {
-      (*m_function)(m_arg1);
-    }
-
-  protected:
-    FnType   m_function;
-    Arg1Type m_arg1;
-};
-
-
-/*
-   This template automates calling a global function with two arguments within it's own thread.
-   It is used as follows:
-
-   void GlobalFunction(PString arg1, int arg2)
-   {
-   }
-
-   ...
-   PString arg;
-   new PThread2Arg<PString, int>(arg1, arg2, &GlobalFunction)
- */
-template<typename Arg1Type, typename Arg2Type>
-class PThread2Arg : public PThread
-{
-    PCLASSINFO(PThread2Arg, PThread);
-  public:
-    typedef void (*FnType)(Arg1Type arg1, Arg2Type arg2); 
-    PThread2Arg(
-      Arg1Type arg1,
-      Arg2Type arg2,
-      FnType function,
-      bool autoDel = false,
-      const char * name = NULL,
-      PThread::Priority priority = PThread::NormalPriority
-    ) : PThread(10000, autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread, priority, name)
-      , m_function(function)
-      , m_arg1(arg1)
-      , m_arg2(arg2)
-    {
-      PThread::Resume();
-    }
-    
-    virtual void Main()
-    {
-      (*m_function)(m_arg1, m_arg2);
-    }
-
-  protected:
-    FnType   m_function;
-    Arg1Type m_arg1;
-    Arg2Type m_arg2;
-};
-
-/*
-   This template automates calling a global function with three arguments within it's own thread.
-   It is used as follows:
-
-   void GlobalFunction(PString arg1, int arg2, int arg3)
-   {
-   }
-
-   ...
-   PString arg;
-   new PThread3Arg<PString, int, int>(arg1, arg2, arg3, &GlobalFunction)
- */
-template<typename Arg1Type, typename Arg2Type, typename Arg3Type>
-class PThread3Arg : public PThread
-{
-  PCLASSINFO(PThread3Arg, PThread);
-  public:
-    typedef void (*FnType)(Arg1Type arg1, Arg2Type arg2, Arg3Type arg3); 
-    PThread3Arg(
-      Arg1Type arg1,
-      Arg2Type arg2,
-      Arg3Type arg3,
-      FnType function,
-      bool autoDel = false,
-      const char * name = NULL,
-      PThread::Priority priority = PThread::NormalPriority
-    ) : PThread(10000, autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread, priority, name)
-      , m_function(function)
-      , m_arg1(arg1)
-      , m_arg2(arg2)
-      , m_arg3(arg3)
-    {
-      PThread::Resume();
-    }
-    
-    virtual void Main()
-    {
-      (*m_function)(m_arg1, m_arg2, m_arg3);
-    }
-
-  protected:
-    FnType   m_function;
-    Arg1Type m_arg1;
-    Arg2Type m_arg2;
-    Arg2Type m_arg3;
 };
 
 /*
@@ -660,7 +490,6 @@ class PThreadObj : public PThread
       , m_object(obj)
       , m_function(function)
     {
-      PThread::Resume();
     }
 
     void Main()
@@ -672,99 +501,6 @@ class PThreadObj : public PThread
     ObjType & m_object;
     ObjTypeFn P_ALIGN_FIELD(m_function, 8);
 };
-
-
-/*
-   This template automates calling a member function with one argument within it's own thread.
-   It is used as follows:
-
-   class Example {
-     public:
-      void Function(PString arg)
-      {
-      }
-   };
-
-   ...
-   Example ex;
-   PString str;
-   new PThreadObj1Arg<Example>(ex, str, &Example::Function)
- */
-template <class ObjType, typename Arg1Type>
-class PThreadObj1Arg : public PThread
-{
-    PCLASSINFO(PThreadObj1Arg, PThread);
-  public:
-    typedef void (ObjType::*ObjTypeFn)(Arg1Type); 
-
-    PThreadObj1Arg(
-      ObjType & obj,
-      Arg1Type arg1,
-      ObjTypeFn function,
-      bool autoDel = false,
-      const char * name = NULL,
-      PThread::Priority priority = PThread::NormalPriority
-    ) : PThread(10000,
-                autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread,
-                priority,
-                name)
-      , m_object(obj)
-      , m_function(function)
-      , m_arg1(arg1)
-    {
-      PThread::Resume();
-    }
-
-    void Main()
-    {
-      (m_object.*m_function)(m_arg1);
-    }
-
-  protected:
-    ObjType & m_object;
-    ObjTypeFn P_ALIGN_FIELD(m_function, 8);
-    Arg1Type  m_arg1;
-};
-
-template <class ObjType, typename Arg1Type, typename Arg2Type>
-class PThreadObj2Arg : public PThread
-{
-    PCLASSINFO(PThreadObj2Arg, PThread);
-  public:
-    typedef void (ObjType::*ObjTypeFn)(Arg1Type, Arg2Type);
-
-    PThreadObj2Arg(
-      ObjType & obj,
-      Arg1Type arg1,
-      Arg2Type arg2,
-      ObjTypeFn function,
-      bool autoDel = false,
-      const char * name = NULL,
-      PThread::Priority priority = PThread::NormalPriority
-    ) : PThread(10000,
-                autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread,
-                priority,
-                name)
-      , m_object(obj)
-      , m_function(function)
-      , m_arg1(arg1)
-      , m_arg2(arg2)
-    {
-      PThread::Resume();
-    }
-
-    void Main()
-    {
-      (m_object.*m_function)(m_arg1, m_arg2);
-    }
-
-  protected:
-    ObjType & m_object;
-    ObjTypeFn P_ALIGN_FIELD(m_function, 8);
-    Arg1Type  m_arg1;
-    Arg2Type  m_arg2;
-};
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //
