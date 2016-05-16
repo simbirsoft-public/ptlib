@@ -166,18 +166,6 @@ install:
 		$(INSTALL) -m 444 $$lib $(DESTDIR)$(libdir); \
 	  fi ) \
 	done )
-	( if test -e $(PTLIB_LIBDIR)/$(PTLIB_SONAME); then \
-	    (cd $(DESTDIR)$(libdir) ; \
-		rm -f $(PTLIB_FILE) ; \
-		ln -sf $(PTLIB_SONAME) $(PTLIB_FILE) \
-	    ) \
-	fi )
-	( if test -e $(PTLIB_LIBDIR)/$(PTLIB_DEBUG_SONAME); then \
-	    (cd $(DESTDIR)$(libdir) ; \
-		rm -f $(PTLIB_DEBUG_FILE) ; \
-		ln -sf $(PTLIB_DEBUG_SONAME) $(PTLIB_DEBUG_FILE) \
-	    ) \
-	fi )
 ifeq (1, $(HAS_PLUGINS))
 	if test -e $(PTLIB_LIBDIR)/device/; then \
 	cd $(PTLIB_LIBDIR)/device/; \
