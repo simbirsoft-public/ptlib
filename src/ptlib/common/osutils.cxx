@@ -2330,6 +2330,8 @@ PThread * PThread::Create(const PNotifier & notifier,
                                          threadName,
                                          stackSize);
 
+    thread->Resume();
+
     if (deletion != AutoDeleteThread)
     {
         return thread;
@@ -2418,7 +2420,6 @@ PSimpleThread::PSimpleThread(const PNotifier & notifier,
     , mCallback(notifier)
     , mParameter(param)
 {
-  Resume();
 }
 
 void PSimpleThread::Main()
