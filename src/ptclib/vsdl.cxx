@@ -101,7 +101,6 @@ class PSDL_Window : public PMutex
     {
       if (m_thread == NULL) {
         m_thread = new PThreadObj<PSDL_Window>(*this, &PSDL_Window::MainLoop, true, SDLName);
-        m_thread->Resume();
         m_started.Wait();
       }
     }

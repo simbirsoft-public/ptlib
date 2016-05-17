@@ -55,7 +55,7 @@ PDECLARE_LIST(TestAudioDevice, PBYTEArray *)
 
 
 
-class TestAudio : public PThread
+class TestAudio : public PThread  
 {
   PCLASSINFO(TestAudio, PThread)
   public:

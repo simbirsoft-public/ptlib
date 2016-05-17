@@ -694,7 +694,6 @@ bool PEthSocketThread::Start(const PString & device, const PString & filter)
   if (m_socket->Connect(device) && m_socket->SetFilter(filter)) {
     m_running = true;
     m_thread = new PThreadObj<PEthSocketThread>(*this, &PEthSocketThread::MainLoop, false, "Sniffer");
-    m_thread->Resume();
     return true;
   }
 

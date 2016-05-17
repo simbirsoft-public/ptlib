@@ -155,6 +155,7 @@ PXConfigWriteThread::PXConfigWriteThread(PSyncPointAck & s)
   : PThread(10000, AutoDeleteThread),
     stop(s)
 {
+  Resume();
 }
 
 PXConfigWriteThread::~PXConfigWriteThread()
@@ -422,10 +423,7 @@ PXConfig * PXConfigDictionary::GetFileConfigInstance(const PFilePath & key, cons
 
   // start write thread, if not already started
   if (writeThread == NULL)
-  {
     writeThread = new PXConfigWriteThread(stopConfigWriteThread);
-    writeThread->Resume();
-  }
 
   PXConfig * config = GetAt(key);
   if (config != NULL) 

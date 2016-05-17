@@ -43,7 +43,7 @@
 
 
 PGPS::PGPS()
-    : PThread(10000, AutoDeleteThread, LowPriority, "GPS")
+: PThread(10000, AutoDeleteThread, LowPriority, "GPS")
 {
 	s_hGPS_Device = NULL;
 	s_hNewLocationData = NULL;
@@ -52,6 +52,7 @@ PGPS::PGPS()
 
 	gpsRunning = false;
 	closeThread = false;
+	Resume();
 }
 
 PGPS::~PGPS()

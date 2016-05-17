@@ -103,10 +103,10 @@ class PThread : public PObject
        Note that the exact timing of the execution of code in threads can
        never be predicted. Thus you you can get a race condition on
        intialising a descendent class. To avoid this problem a thread is
-       always started suspended. You HAVE TO call the <code>Resume()</code> function after
+       always started suspended. You must call the <code>Resume()</code> function after
        your descendent class construction is complete.
 
-       If synchronization is required between threads then the use of
+       If synchronisation is required between threads then the use of
        semaphores is essential.
 
        If the <code>deletion</code> is set to <code>AutoDeleteThread</code>
@@ -129,7 +129,7 @@ class PThread : public PObject
        with all its restrictions and penalties. See that function for more
        information.
 
-       NOTE that the correct way for a thread to finalize is to return from
+       Note that the correct way for a thread to terminate is to return from
        the <code>Main()</code> function.
      */
     ~PThread();
@@ -150,12 +150,12 @@ class PThread : public PObject
   //@{
     /** Restart a terminated thread using the same stack priority etc that
        was current when the thread terminated.
-
+       
        If the thread is still running then this function is ignored.
      */
     virtual void Restart();
 
-    /** Terminate the thread. It is highly recommended that THIS IS NOT USED
+    /** Terminate the thread. It is highly recommended that this is not used
        except in abnormal abort situations as not all clean up of resources
        allocated to the thread will be executed. This is especially true in
        C++ as the destructors of objects that are automatic variables are not
@@ -207,8 +207,21 @@ class PThread : public PObject
     /** Resume thread execution, this is identical to
        <code>Suspend(false)</code>.
 
-      The Resume() method MUST NOT be called from the constructor of
-      descendant classes!
+      The Resume() method may be called from within the constructor of a
+      PThread descendant.  However, the <code>Resume()</code> should be in the
+      constructor of the most descendant class. So, if you have a
+      class B (which is descended of PThread), and a class C (which is
+      descended of B), placing the call to <code>Resume()</code> in the constructor of B is
+      unwise.
+
+      If you do place a call to <code>Resume()</code> in the constructor, it
+      should be at the end of the constructor, after all the other
+      initialisation in the constructor.
+
+      The reason the call to <code>Resume()</code> should be at the end of the
+      construction process is simple - you want the thread to start
+      when all the variables in the class have been correctly
+      initialised.
      */
     virtual void Resume();
 
@@ -269,8 +282,8 @@ class PThread : public PObject
     );
   //@}
 
-  /** @name Miscellaneous */
-  /// @{
+  /**@name Miscellaneous */
+  //@{
     /** Get operating system specific thread identifier for this thread.
       * Note that the return value from these functions is only valid
       * if called by the owning thread. Calling this function for another
@@ -297,8 +310,8 @@ class PThread : public PObject
     /** User override function for the main execution routine of the thread. A
        descendent class must provide the code that will be executed in the
        thread within this function.
-
-       NOTE that the correct way for a thread to terminate is to return from
+       
+       Note that the correct way for a thread to terminate is to return from
        this function.
      */
     virtual void Main() = 0;
@@ -322,29 +335,25 @@ class PThread : public PObject
      */
     static void Yield();
 
-    /** Create a simple thread executing the specified notifier.
+    /**Create a simple thread executing the specified notifier.
        This creates a simple <code>PThread</code> class that automatically executes the
        function defined by the <code>PNotifier</code> in the context of a new thread.
       */
     static PThread * Create(
       const PNotifier & notifier,     ///< Function to execute in thread.
-      P_INT_PTR parameter = 0,              ///< Parameter value to pass to notifier.
+      INT parameter = 0,              ///< Parameter value to pass to notifier.
       AutoDeleteFlag deletion = AutoDeleteThread,
         ///< Automatically delete PThread instance on termination of thread.
       Priority priorityLevel = NormalPriority,  ///< Initial priority of thread.
       const PString & threadName = PString::Empty(), ///< The name of the thread (for Debug/Trace)
       PINDEX stackSize = 0            ///< Stack size on some platforms, 0 == default
     );
-
     static PThread * Create(
       const PNotifier & notifier,     ///< Function to execute in thread.
       const PString & threadName      ///< The name of the thread (for Debug/Trace)
-    )
-    {
-        return Create(notifier, 0, NoAutoDeleteThread, NormalPriority, threadName);
-    }
-  /// @}
-
+    ) { return Create(notifier, 0, NoAutoDeleteThread, NormalPriority, threadName); }
+  //@}
+  
     bool IsAutoDelete() const { return m_type == e_IsAutoDelete || m_type == e_IsExternal; }
 
     /// Thread local storage base class, see PThreadLocalStorage for template.
@@ -406,10 +415,42 @@ class PThread : public PObject
 
 
 /** Define some templates to simplify the declaration
-  * of simple <code>PThread</code> descendants with one or two paramaters.
-  *
-  * Please take into account documentation on PThread::Resume method.
+  * of simple <code>PThread</code> descendants with one or two paramaters 
   */
+
+/*
+   This class automates calling a global function with no arguments within it's own thread.
+   It is used as follows:
+
+   void GlobalFunction()
+   {
+   }
+
+   ...
+   PString arg;
+   new PThreadMain(&GlobalFunction)
+ */
+class PThreadMain : public PThread
+{
+    PCLASSINFO(PThreadMain, PThread);
+  public:
+    typedef void (*FnType)(); 
+    PThreadMain(FnType function, bool autoDel = false)
+      : PThread(10000, autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread)
+      , m_function(function)
+    {
+      PThread::Resume();
+    }
+
+    virtual void Main()
+    {
+      (*m_function)();
+    }
+
+  protected:
+    FnType m_function;
+};
+
 
 /*
    This template automates calling a global function using a functor
@@ -421,8 +462,7 @@ class PThread : public PObject
 
    ...
    Functor arg;
-   PThread * thread = new PThreadFunctor<Functor>(arg)
-   thread->Resume();
+   new PThreadFunctor<Functor>(arg)
  */
 template<typename Functor>
 class PThreadFunctor : public PThread
@@ -433,6 +473,7 @@ class PThreadFunctor : public PThread
       : PThread(10000, autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread)
       , m_funct(funct)
     {
+      PThread::Resume();
     }
 
     virtual void Main()
@@ -442,6 +483,141 @@ class PThreadFunctor : public PThread
 
   protected:
     Functor & m_funct;
+};
+
+
+/*
+   This template automates calling a global function with one argument within it's own thread.
+   It is used as follows:
+
+   void GlobalFunction(PString arg)
+   {
+   }
+
+   ...
+   PString arg;
+   new PThread1Arg<PString>(arg, &GlobalFunction)
+ */
+template<typename Arg1Type>
+class PThread1Arg : public PThread
+{
+    PCLASSINFO(PThread1Arg, PThread);
+  public:
+    typedef void (*FnType)(Arg1Type arg1);
+
+    PThread1Arg(
+      Arg1Type arg1,
+      FnType function,
+      bool autoDel = false,
+      const char * name = NULL,
+      PThread::Priority priority = PThread::NormalPriority
+    ) : PThread(10000, autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread, priority, name)
+      , m_function(function)
+      , m_arg1(arg1)
+    {
+      PThread::Resume();
+    }
+
+    virtual void Main()
+    {
+      (*m_function)(m_arg1);
+    }
+
+  protected:
+    FnType   m_function;
+    Arg1Type m_arg1;
+};
+
+
+/*
+   This template automates calling a global function with two arguments within it's own thread.
+   It is used as follows:
+
+   void GlobalFunction(PString arg1, int arg2)
+   {
+   }
+
+   ...
+   PString arg;
+   new PThread2Arg<PString, int>(arg1, arg2, &GlobalFunction)
+ */
+template<typename Arg1Type, typename Arg2Type>
+class PThread2Arg : public PThread
+{
+    PCLASSINFO(PThread2Arg, PThread);
+  public:
+    typedef void (*FnType)(Arg1Type arg1, Arg2Type arg2); 
+    PThread2Arg(
+      Arg1Type arg1,
+      Arg2Type arg2,
+      FnType function,
+      bool autoDel = false,
+      const char * name = NULL,
+      PThread::Priority priority = PThread::NormalPriority
+    ) : PThread(10000, autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread, priority, name)
+      , m_function(function)
+      , m_arg1(arg1)
+      , m_arg2(arg2)
+    {
+      PThread::Resume();
+    }
+    
+    virtual void Main()
+    {
+      (*m_function)(m_arg1, m_arg2);
+    }
+
+  protected:
+    FnType   m_function;
+    Arg1Type m_arg1;
+    Arg2Type m_arg2;
+};
+
+/*
+   This template automates calling a global function with three arguments within it's own thread.
+   It is used as follows:
+
+   void GlobalFunction(PString arg1, int arg2, int arg3)
+   {
+   }
+
+   ...
+   PString arg;
+   new PThread3Arg<PString, int, int>(arg1, arg2, arg3, &GlobalFunction)
+ */
+template<typename Arg1Type, typename Arg2Type, typename Arg3Type>
+class PThread3Arg : public PThread
+{
+  PCLASSINFO(PThread3Arg, PThread);
+  public:
+    typedef void (*FnType)(Arg1Type arg1, Arg2Type arg2, Arg3Type arg3); 
+    PThread3Arg(
+      Arg1Type arg1,
+      Arg2Type arg2,
+      Arg3Type arg3,
+      FnType function,
+      bool autoDel = false,
+      const char * name = NULL,
+      PThread::Priority priority = PThread::NormalPriority
+    ) : PThread(10000, autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread, priority, name)
+      , m_function(function)
+      , m_arg1(arg1)
+      , m_arg2(arg2)
+      , m_arg3(arg3)
+    {
+      PThread::Resume();
+    }
+    
+    virtual void Main()
+    {
+      (*m_function)(m_arg1, m_arg2, m_arg3);
+    }
+
+  protected:
+    FnType   m_function;
+    Arg1Type m_arg1;
+    Arg2Type m_arg2;
+    Arg2Type m_arg3;
 };
 
 /*
@@ -457,8 +633,7 @@ class PThreadFunctor : public PThread
 
    ...
    Example ex;
-   PThread * thread = new PThreadObj<Example>(ex, &Example::Function)
-   thread->Resume();
+   new PThreadObj<Example>(ex, &Example::Function)
  */
 
 template <typename ObjType>
@@ -481,6 +656,7 @@ class PThreadObj : public PThread
       , m_object(obj)
       , m_function(function)
     {
+      PThread::Resume();
     }
 
     void Main()
@@ -492,6 +668,99 @@ class PThreadObj : public PThread
     ObjType & m_object;
     ObjTypeFn P_ALIGN_FIELD(m_function, 8);
 };
+
+
+/*
+   This template automates calling a member function with one argument within it's own thread.
+   It is used as follows:
+
+   class Example {
+     public:
+      void Function(PString arg)
+      {
+      }
+   };
+
+   ...
+   Example ex;
+   PString str;
+   new PThreadObj1Arg<Example>(ex, str, &Example::Function)
+ */
+template <class ObjType, typename Arg1Type>
+class PThreadObj1Arg : public PThread
+{
+    PCLASSINFO(PThreadObj1Arg, PThread);
+  public:
+    typedef void (ObjType::*ObjTypeFn)(Arg1Type); 
+
+    PThreadObj1Arg(
+      ObjType & obj,
+      Arg1Type arg1,
+      ObjTypeFn function,
+      bool autoDel = false,
+      const char * name = NULL,
+      PThread::Priority priority = PThread::NormalPriority
+    ) : PThread(10000,
+                autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread,
+                priority,
+                name)
+      , m_object(obj)
+      , m_function(function)
+      , m_arg1(arg1)
+    {
+      PThread::Resume();
+    }
+
+    void Main()
+    {
+      (m_object.*m_function)(m_arg1);
+    }
+
+  protected:
+    ObjType & m_object;
+    ObjTypeFn P_ALIGN_FIELD(m_function, 8);
+    Arg1Type  m_arg1;
+};
+
+template <class ObjType, typename Arg1Type, typename Arg2Type>
+class PThreadObj2Arg : public PThread
+{
+    PCLASSINFO(PThreadObj2Arg, PThread);
+  public:
+    typedef void (ObjType::*ObjTypeFn)(Arg1Type, Arg2Type);
+
+    PThreadObj2Arg(
+      ObjType & obj,
+      Arg1Type arg1,
+      Arg2Type arg2,
+      ObjTypeFn function,
+      bool autoDel = false,
+      const char * name = NULL,
+      PThread::Priority priority = PThread::NormalPriority
+    ) : PThread(10000,
+                autoDel ? PThread::AutoDeleteThread : PThread::NoAutoDeleteThread,
+                priority,
+                name)
+      , m_object(obj)
+      , m_function(function)
+      , m_arg1(arg1)
+      , m_arg2(arg2)
+    {
+      PThread::Resume();
+    }
+
+    void Main()
+    {
+      (m_object.*m_function)(m_arg1, m_arg2);
+    }
+
+  protected:
+    ObjType & m_object;
+    ObjTypeFn P_ALIGN_FIELD(m_function, 8);
+    Arg1Type  m_arg1;
+    Arg2Type  m_arg2;
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //

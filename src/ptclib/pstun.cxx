@@ -1707,6 +1707,8 @@ void AllocateSocketFunctor::operator () (PThread &)
   }
 }
 
+typedef PThreadFunctor<AllocateSocketFunctor> AllocateSocketThread;
+
 bool PTURNClient::CreateSocket(Component component, PUDPSocket * & socket, const PIPSocket::Address & binding, WORD port)
 {
   if (component != PNatMethod::eComponent_RTP && component != PNatMethod::eComponent_RTCP)
@@ -1769,10 +1771,7 @@ bool PTURNClient::CreateSocketPair(PUDPSocket * & socket1,
   AllocateSocketFunctor op1(*this, PNatMethod::eComponent_RTP,   binding, pairedPortInfo);
   AllocateSocketFunctor op2(*this, PNatMethod::eComponent_RTCP,  binding, pairedPortInfo);
   PThread * thread1 = new PThreadFunctor<AllocateSocketFunctor>(op1);
-  thread1->Resume();
-
   PThread * thread2 = new PThreadFunctor<AllocateSocketFunctor>(op2);
-  thread2->Resume();
 
   PTRACE(3, "TURN\tWaiting for allocations to complete");
   thread1->WaitForTermination();

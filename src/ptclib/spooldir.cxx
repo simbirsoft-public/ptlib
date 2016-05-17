@@ -54,7 +54,6 @@ bool PSpoolDirectory::Open(const PDirectory & dir, const PString & type)
 
   PTRACE(3, "PSpoolDirectory\tThread started " << m_threadRunning);
   m_thread = new PThreadObj<PSpoolDirectory>(*this, &PSpoolDirectory::ThreadMain);
-  m_thread->Resume();
 
   m_directory = dir;
   m_fileType  = type;

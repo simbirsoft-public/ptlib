@@ -104,13 +104,11 @@ void SyncPoints::Main()
   }
 
   Runner *lastRunner = NULL;
-  for (PINDEX i = 0; i < size; i++)
-  {
+  for (PINDEX i = 0; i < size; i++) {
     Runner * thisRunner = new Runner(*this, lastRunner, i);
-    thisRunner->Resume();
-
+    
     list.push_back(thisRunner);
-    lastRunner = thisRunner;
+    lastRunner = thisRunner;    
   }
 
   PTime a;
@@ -142,6 +140,7 @@ Runner::Runner(SyncPoints & _app, Runner * _nextThread, PINDEX _id)
    nextThread(_nextThread),
    id(_id)
 {
+  Resume();
 }
 
 void Runner::Main()

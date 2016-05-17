@@ -108,8 +108,7 @@ class UserInterface: public PThread
 public:
   UserInterface(XMPPFrame & _frame)
     : PThread(1000, NoAutoDeleteThread),  frame(_frame)
-    {
-    }
+    { Resume(); }
    
   void Main();
      
