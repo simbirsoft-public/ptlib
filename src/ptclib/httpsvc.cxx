@@ -209,11 +209,13 @@ bool PHTTPServiceProcess::ListenForHTTP(const PString & interfaces,
   }
 
   if (atLeastOne && stackSize > 1000)
-    new PHTTPServiceThread(stackSize, *this);
+  {
+    PThread * thread = new PHTTPServiceThread(stackSize, *this);
+    thread->Resume();
+  }
 
   return atLeastOne;
 }
-
 
 bool PHTTPServiceProcess::ListenForHTTP(PSocket * listener,
                                         PSocket::Reusability reuse,
@@ -235,7 +237,10 @@ bool PHTTPServiceProcess::ListenForHTTP(PSocket * listener,
   m_httpListeningSockets.Append(listener);
 
   if (stackSize > 1000)
-    new PHTTPServiceThread(stackSize, *this);
+  {
+    PThread * thread = new PHTTPServiceThread(stackSize, *this);
+    thread->Resume();
+  }
 
   return true;
 }
@@ -465,9 +470,7 @@ PHTTPServiceThread::PHTTPServiceThread(PINDEX stackSize,
 
   myStackSize = stackSize;
   socket = NULL;
-  Resume();
 }
-
 
 PHTTPServiceThread::~PHTTPServiceThread()
 {
@@ -477,23 +480,22 @@ PHTTPServiceThread::~PHTTPServiceThread()
   delete socket;
 }
 
-
 void PHTTPServiceThread::Close()
 {
   if (socket != NULL)
     socket->Close();
 }
 
-
 void PHTTPServiceThread::Main()
 {
   socket = process.AcceptHTTP();
-  if (socket != NULL) {
-    new PHTTPServiceThread(myStackSize, process);
+  if (socket != NULL)
+  {
+    PThread * thread = new PHTTPServiceThread(myStackSize, process);
+    thread->Resume();
     process.ProcessHTTP(*socket);
   }
 }
-
 
 //////////////////////////////////////////////////////////////
 

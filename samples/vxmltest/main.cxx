@@ -34,7 +34,8 @@ class ChannelCopyThread : public PThread
   public:
     ChannelCopyThread(PChannel & _from, PChannel & _to)
       : PThread(1000, NoAutoDeleteThread), from(_from), to(_to)
-    { Resume(); }
+    {
+    }
 
     void Main();
 
@@ -127,6 +128,7 @@ void Vxmltest::Main()
 
   cout << "Starting media" << endl;
   PThread * thread1 = new ChannelCopyThread(*vxml, player);
+  thread1->Resume();
 
   inputRunning = true;
   PThread * inputThread = PThread::Create(PCREATE_NOTIFIER(InputThread), 0, NoAutoDeleteThread);

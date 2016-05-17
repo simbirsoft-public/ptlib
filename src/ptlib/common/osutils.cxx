@@ -82,20 +82,23 @@ class PExternalThread : public PThread
 
 class PSimpleThread : public PThread
 {
-    PCLASSINFO(PSimpleThread, PThread);
-  public:
+    PCLASSINFO(PSimpleThread, PThread)
+
+public:
     PSimpleThread(
       const PNotifier & notifier,
-      INT parameter,
+      P_INT_PTR parameter,
       AutoDeleteFlag deletion,
       Priority priorityLevel,
       const PString & threadName,
       PINDEX stackSize
     );
+
     void Main();
-  protected:
-    PNotifier callback;
-    INT parameter;
+
+protected:
+    PNotifier mCallback;
+    P_INT_PTR mParameter;
 };
 
 
@@ -1891,7 +1894,6 @@ void PProcess::Startup()
   }
 }
 
-
 bool PProcess::SignalTimerChange()
 {
   if (!PAssert(IsInitialised(), PLogicError) || m_shuttingDown) 
@@ -1900,11 +1902,13 @@ bool PProcess::SignalTimerChange()
   if (m_keepingHouse.TestAndSet(true))
     m_signalHouseKeeper.Signal();
   else
+  {
     m_houseKeeper = new PThreadObj<PProcess>(*this, &PProcess::HouseKeeping, false, "PTLib Housekeeper");
+    m_houseKeeper->Resume();
+  }
 
   return true;
 }
-
 
 void PProcess::PreShutdown()
 {
@@ -2314,27 +2318,31 @@ void PThread::SetAutoDelete(AutoDeleteFlag deletion)
 
 
 PThread * PThread::Create(const PNotifier & notifier,
-                          INT parameter,
+                          P_INT_PTR parameter,
                           AutoDeleteFlag deletion,
                           Priority priorityLevel,
                           const PString & threadName,
                           PINDEX stackSize)
 {
-  PThread * thread = new PSimpleThread(notifier,
-                                       parameter,
-                                       deletion,
-                                       priorityLevel,
-                                       threadName,
-                                       stackSize);
-  if (deletion != AutoDeleteThread)
-    return thread;
+    PThread * thread = new PSimpleThread(notifier,
+                                         parameter,
+                                         deletion,
+                                         priorityLevel,
+                                         threadName,
+                                         stackSize);
 
-  // Do not return a pointer to the thread if it is auto-delete as this
-  // pointer is extremely dangerous to use, it could be deleted at any moment
-  // from now on so using the pointer could crash the program.
-  return NULL;
+    thread->Resume();
+
+    if (deletion != AutoDeleteThread)
+    {
+        return thread;
+    }
+
+    // Do not return a pointer to the thread if it is auto-delete as this
+    // pointer is extremely dangerous to use, it could be deleted at any moment
+    // from now on so using the pointer could crash the program.
+    return NULL;
 }
-
 
 PThread::~PThread()
 {
@@ -2404,24 +2412,21 @@ void * PThread::LocalStorageBase::GetStorage() const
 /////////////////////////////////////////////////////////////////////////////
 
 PSimpleThread::PSimpleThread(const PNotifier & notifier,
-                             INT param,
+                             P_INT_PTR param,
                              AutoDeleteFlag deletion,
                              Priority priorityLevel,
                              const PString & threadName,
                              PINDEX stackSize)
-  : PThread(stackSize, deletion, priorityLevel, threadName),
-    callback(notifier),
-    parameter(param)
+    : PThread(stackSize, deletion, priorityLevel, threadName)
+    , mCallback(notifier)
+    , mParameter(param)
 {
-  Resume();
 }
-
 
 void PSimpleThread::Main()
 {
-  callback(*this, parameter);
+    mCallback(*this, mParameter);
 }
-
 
 /////////////////////////////////////////////////////////////////////////////
 

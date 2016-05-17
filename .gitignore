@@ -1,0 +1,9 @@
+# ignore Qt Creator's cache, autosave
+*.user
+*.autosave
+# ignore precompiled header's binaries
+*.pch
+# ignore Dia's temporary files
+*.dia~
+# ignore vim's swap files
+*.swp

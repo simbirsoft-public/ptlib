@@ -57,7 +57,10 @@ class UserInterfaceThread : public PThread
     PCLASSINFO(UserInterfaceThread, PThread);
   public:
     UserInterfaceThread(Serial & _srl)
-      : PThread(1000, NoAutoDeleteThread), srl(_srl) { Resume(); }
+        : PThread(1000, NoAutoDeleteThread)
+        , srl(_srl)
+    {
+    }
 
     void Main()
       { srl.HandleConsoleInput(); }
@@ -71,7 +74,10 @@ class SerialInterfaceThread : public PThread
     PCLASSINFO(SerialInterfaceThread, PThread);
 public:
     SerialInterfaceThread(Serial & _srl)
-      : PThread(1000, NoAutoDeleteThread), srl(_srl) { Resume(); }
+        : PThread(1000, NoAutoDeleteThread)
+        , srl(_srl)
+    {
+    }
 
     void Main()
       { srl.HandleSerialInput(); }
@@ -169,8 +175,11 @@ void Serial::Main()
       return;
   }
 
-  UserInterfaceThread *ui = new UserInterfaceThread(*this);
-  SerialInterfaceThread *si = new SerialInterfaceThread(*this);
+  UserInterfaceThread * ui = new UserInterfaceThread(*this);
+  ui->Resume();
+
+  SerialInterfaceThread * si = new SerialInterfaceThread(*this);
+  si->Resume();
 
   ui->WaitForTermination();
 

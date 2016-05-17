@@ -194,7 +194,6 @@ OnDelayThreadEnd::OnDelayThreadEnd(SafeTest &_safeTest, const PString & _delayTh
     safeTest(_safeTest), 
     delayThreadId(_delayThreadId)
 {
-  Resume();
 }
 
 void OnDelayThreadEnd::Main()
@@ -213,7 +212,6 @@ DelayWorkerThread::DelayWorkerThread(DelayThread & _delayThread, PInt64 _iterati
 {
   thisThreadName << iteration << " Delay Thread";
   SetThreadName(thisThreadName);
-  Resume();
 }
 
 void DelayWorkerThread::Main()
@@ -229,7 +227,6 @@ DelayThreadTermination::DelayThreadTermination(DelayThread & _delayThread)
 {
   thisThreadName <<"%X DT term";
   SetThreadName(thisThreadName);
-  Resume();
 }
 
 void DelayThreadTermination::Main()
@@ -247,9 +244,13 @@ DelayThread::DelayThread(SafeTest &_safeTest, PINDEX _delay, PInt64 iteration)
 
   PTRACE(5, "Constructor for a non auto deleted delay thread");
 
-  if (safeTest.AvoidPThreadCreate()) {
-    new DelayWorkerThread(*this, iteration);
-  } else {
+  if (safeTest.AvoidPThreadCreate())
+  {
+    PThread * thread = new DelayWorkerThread(*this, iteration);
+    thread->Resume();
+  }
+  else
+  {
     name << PString(iteration) << " Delay Thread";
     PThread::Create(PCREATE_NOTIFIER(DelayThreadMain), 30000,
 		    PThread::AutoDeleteThread,
@@ -275,11 +276,13 @@ void DelayThread::DelayThreadMain(PThread &thisThread, INT)
   PThread::Sleep(delay);
   PTRACE(3, "DelayThread finished " << id);
 
-
-  if (safeTest.UseOnThreadEnd()) {
+  if (safeTest.UseOnThreadEnd())
+  {
     threadRunning = false;
-    new OnDelayThreadEnd(safeTest, id);
-  } else {
+    PThread * thread = new OnDelayThreadEnd(safeTest, id);
+    thread->Resume();
+  }
+  else {
     SafeReference();    
     Release();
   }
@@ -287,9 +290,13 @@ void DelayThread::DelayThreadMain(PThread &thisThread, INT)
 
 void DelayThread::Release()
 {
-    if (safeTest.AvoidPThreadCreate()) {
-      new DelayThreadTermination(*this);
-    } else {
+    if (safeTest.AvoidPThreadCreate())
+    {
+        PThread * thread = new DelayThreadTermination(*this);
+        thread->Resume();
+    }
+    else
+    {
       // Add a reference for the thread we are about to start
       PThread::Create(PCREATE_NOTIFIER(OnReleaseThreadMain), 10000,
 		      PThread::AutoDeleteThread,
@@ -311,13 +318,11 @@ void DelayThread::PrintOn(ostream & strm) const
 }
 ///////////////////////////////////////////////////////////////////////////
 
-  
 ReporterThread::ReporterThread(LauncherThread & _launcher)
   : PThread(10000, NoAutoDeleteThread),
     launcher(_launcher)
 {
   terminateNow = false;
-  Resume();
 }
 
 void ReporterThread::Terminate()
@@ -346,7 +351,10 @@ LauncherThread::LauncherThread(SafeTest &_safeTest)
   keepGoing = true; 
 
   if (safeTest.RegularReporting())
+  {
     reporter = new ReporterThread(*this);
+    reporter->Resume();
+  }
   else
     reporter = NULL;
 }

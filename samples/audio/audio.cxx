@@ -241,7 +241,10 @@ void TestAudioDevice::Test(const PString & captureFileName)
    PTRACE(3, "Start operation of TestAudioDevice");
 
    TestAudioRead reader(*this, captureFileName);
-   TestAudioWrite writer(*this);   
+   reader.Resume();
+
+   TestAudioWrite writer(*this);
+   writer.Resume();
 
 
    PStringStream help;
@@ -359,9 +362,8 @@ PBoolean TestAudioDevice::DoEndNow()
 TestAudioRead::TestAudioRead(TestAudioDevice &master, const PString & _captureFileName)
     :TestAudio(master),
      captureFileName(_captureFileName)
-{    
+{
   PTRACE(3, "Reader\tInitiate thread for reading " );
-  Resume();
 }
 
 void TestAudioRead::ReportIterations()
@@ -408,7 +410,6 @@ TestAudioWrite::TestAudioWrite(TestAudioDevice &master)
    : TestAudio(master)
 {
   PTRACE(3, "Reader\tInitiate thread for writing " );
-  Resume();
 }
 
 void TestAudioWrite::ReportIterations()
