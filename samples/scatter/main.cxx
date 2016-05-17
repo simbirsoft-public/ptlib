@@ -120,7 +120,7 @@ void ScatterTest::Main()
 
   WaitForIncoming waiter(rxSocket);
   PThread * thread = new PThreadFunctor<WaitForIncoming>(waiter);
-  thread->Resume();
+
 
   // send some test data
   PUDPSocket txSocket;

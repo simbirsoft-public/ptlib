@@ -631,12 +631,9 @@ void PServiceProcess::PXOnSignal(int sig)
     case SIGINT :
     case SIGHUP :
     case SIGTERM :
-    {
       PTRACE(3, "PTLib", "Starting thread to terminate service process, signal " << sig);
-      PThread * thread = new PThreadObj<PServiceProcess>(*this, &PServiceProcess::Terminate);
-      thread->Resume();
+      new PThreadObj<PServiceProcess>(*this, &PServiceProcess::Terminate);
       return;
-    }
 
     case TraceUpSignal :
       if (GetLogLevel() < PSystemLog::NumLogLevels-1) {

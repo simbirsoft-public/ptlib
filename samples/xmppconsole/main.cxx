@@ -304,8 +304,10 @@ void XMPPConsole::Main()
   
   frame.ConnectNow();
 
-  UserInterface ui(frame);
-  ui.Resume();
+  
+   
+
+  UserInterface ui (frame);
   ui.WaitForTermination();
   frame.DisconnectNow();
 

@@ -82,19 +82,11 @@ void SortedListTest::Main()
     ss.erase(found);
   }
 
-  for (PINDEX i = 0; i < 15; i++)
-  {
-      PThread * thread = NULL;
+  for (PINDEX i = 0; i < 15; i++) {
     if (i < 10)
-    {
-      thread = new DoSomeThing1(i);
-    }
+      new DoSomeThing1(i);
     else
-    {
-      thread = new DoSomeThing2(i);
-    }
-
-      thread->Resume();
+      new DoSomeThing2(i);
   }
 
   Suspend();
@@ -104,6 +96,7 @@ void SortedListTest::Main()
 DoSomeThing1::DoSomeThing1(PINDEX _index)
   : PThread(1000, AutoDeleteThread, NormalPriority, psprintf("DoSomeThing1 %u", _index)), index(_index)
 {
+  Resume();
 }
 
 
@@ -165,6 +158,7 @@ DoSomeThing2::DoSomeThing2(PINDEX _index)
   : PThread(1000, AutoDeleteThread, NormalPriority, psprintf("DoSomeThing2 %u", _index))
   , index(_index)
 {
+  Resume();
 }
 
 
