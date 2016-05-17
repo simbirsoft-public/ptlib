@@ -110,11 +110,17 @@ void MyProcess::Main()
   }
 
   PList<TestThread> tests;
-  do {
-    tests.Append(new TestThread(tests.GetSize()+1, args));
-    if (!tests.back().IsOpen())
-      return;
-  } while (args.Parse());
+  do
+  {
+      TestThread * thread = new TestThread(tests.GetSize() + 1, args);
+      thread->Resume();
+      tests.Append(thread);
+      if (!tests.back().IsOpen())
+      {
+          return;
+      }
+  }
+  while (args.Parse());
 
   m_exit.Wait();
 
@@ -157,8 +163,6 @@ TestThread::TestThread(PINDEX idx, PArgList & args)
     cerr << "Could not use filter \"" << filter << '"' << endl;
     m_socket.Close();
   }
-
-  Resume();
 }
 
 

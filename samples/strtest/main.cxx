@@ -134,8 +134,9 @@ class StringHolder
       PCLASSINFO(TestThread, PThread);
       public:
         TestThread(StringHolder & _holder) 
-        : PThread(1000,NoAutoDeleteThread), holder(_holder)
-        { Resume(); }
+            : PThread(1000,NoAutoDeleteThread), holder(_holder)
+        {
+        }
 
         void Main() 
         { int count = 0; while (!finishFlag && count < COUNT_MAX) holder.TestString(count++, "sub"); }
@@ -145,9 +146,11 @@ class StringHolder
 
     PThread * StartThread()
     {
-      return new TestThread(*this);
-    }
+        PThread * thread = new TestThread(*this);
+        thread->Resume();
 
+        return thread;
+    }
 };
 
 struct PStringConv : public StringConv<PString> {

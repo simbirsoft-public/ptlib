@@ -1894,7 +1894,6 @@ void PProcess::Startup()
   }
 }
 
-
 bool PProcess::SignalTimerChange()
 {
   if (!PAssert(IsInitialised(), PLogicError) || m_shuttingDown) 
@@ -1903,11 +1902,13 @@ bool PProcess::SignalTimerChange()
   if (m_keepingHouse.TestAndSet(true))
     m_signalHouseKeeper.Signal();
   else
+  {
     m_houseKeeper = new PThreadObj<PProcess>(*this, &PProcess::HouseKeeping, false, "PTLib Housekeeper");
+    m_houseKeeper->Resume();
+  }
 
   return true;
 }
-
 
 void PProcess::PreShutdown()
 {

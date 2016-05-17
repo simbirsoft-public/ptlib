@@ -100,6 +100,7 @@ void PInterfaceMonitor::Start()
       m_changedDetector = PIPSocket::CreateRouteTableDetector();
       m_updateThread = new PThreadObj<PInterfaceMonitor>(*this, &PInterfaceMonitor::UpdateThreadMain);
       m_updateThread->SetThreadName("Network Interface Monitor");
+      m_updateThread->Resume();
     }
   }
 }

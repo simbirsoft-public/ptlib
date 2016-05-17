@@ -47,9 +47,9 @@ class MyThread1 : public PThread
 {
   PCLASSINFO(MyThread1, PThread);
   public:
-    MyThread1() : PThread(1000,NoAutoDeleteThread)
+    MyThread1()
+        : PThread(1000,NoAutoDeleteThread)
     {
-      Resume(); // start running this thread when it is created.
     }
 
     void Main() {
@@ -81,7 +81,9 @@ class MyThread2 : public PThread
 {
   PCLASSINFO(MyThread2, PThread);
   public:
-    MyThread2() : PThread(1000,NoAutoDeleteThread) {
+    MyThread2()
+        : PThread(1000,NoAutoDeleteThread)
+    {
       exitFlag = false;
     }
 
@@ -145,6 +147,7 @@ void ThreadTest::Main()
   MyThread2 * mythread2;
 
   mythread1 = new MyThread1();
+  mythread1->Resume();
   mythread2 = new MyThread2();
 
 
