@@ -406,7 +406,9 @@ class PThread : public PObject
 
 
 /** Define some templates to simplify the declaration
-  * of simple <code>PThread</code> descendants with one or two paramaters 
+  * of simple <code>PThread</code> descendants with one or two paramaters.
+  *
+  * Please take into account documentation on PThread::Resume method.
   */
 
 /*
@@ -419,7 +421,8 @@ class PThread : public PObject
 
    ...
    Functor arg;
-   new PThreadFunctor<Functor>(arg)
+   PThread * thread = new PThreadFunctor<Functor>(arg)
+   thread->Resume();
  */
 template<typename Functor>
 class PThreadFunctor : public PThread
@@ -454,7 +457,8 @@ class PThreadFunctor : public PThread
 
    ...
    Example ex;
-   new PThreadObj<Example>(ex, &Example::Function)
+   PThread * thread = new PThreadObj<Example>(ex, &Example::Function)
+   thread->Resume();
  */
 
 template <typename ObjType>
