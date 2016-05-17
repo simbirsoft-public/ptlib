@@ -103,10 +103,10 @@ class PThread : public PObject
        Note that the exact timing of the execution of code in threads can
        never be predicted. Thus you you can get a race condition on
        intialising a descendent class. To avoid this problem a thread is
-       always started suspended. You must call the <code>Resume()</code> function after
+       always started suspended. You HAVE TO call the <code>Resume()</code> function after
        your descendent class construction is complete.
 
-       If synchronisation is required between threads then the use of
+       If synchronization is required between threads then the use of
        semaphores is essential.
 
        If the <code>deletion</code> is set to <code>AutoDeleteThread</code>
@@ -129,7 +129,7 @@ class PThread : public PObject
        with all its restrictions and penalties. See that function for more
        information.
 
-       Note that the correct way for a thread to terminate is to return from
+       NOTE that the correct way for a thread to finalize is to return from
        the <code>Main()</code> function.
      */
     ~PThread();
@@ -150,12 +150,12 @@ class PThread : public PObject
   //@{
     /** Restart a terminated thread using the same stack priority etc that
        was current when the thread terminated.
-       
+
        If the thread is still running then this function is ignored.
      */
     virtual void Restart();
 
-    /** Terminate the thread. It is highly recommended that this is not used
+    /** Terminate the thread. It is highly recommended that THIS IS NOT USED
        except in abnormal abort situations as not all clean up of resources
        allocated to the thread will be executed. This is especially true in
        C++ as the destructors of objects that are automatic variables are not
@@ -207,21 +207,8 @@ class PThread : public PObject
     /** Resume thread execution, this is identical to
        <code>Suspend(false)</code>.
 
-      The Resume() method may be called from within the constructor of a
-      PThread descendant.  However, the <code>Resume()</code> should be in the
-      constructor of the most descendant class. So, if you have a
-      class B (which is descended of PThread), and a class C (which is
-      descended of B), placing the call to <code>Resume()</code> in the constructor of B is
-      unwise.
-
-      If you do place a call to <code>Resume()</code> in the constructor, it
-      should be at the end of the constructor, after all the other
-      initialisation in the constructor.
-
-      The reason the call to <code>Resume()</code> should be at the end of the
-      construction process is simple - you want the thread to start
-      when all the variables in the class have been correctly
-      initialised.
+      The Resume() method MUST NOT be called from the constructor of
+      descendant classes!
      */
     virtual void Resume();
 
@@ -282,8 +269,8 @@ class PThread : public PObject
     );
   //@}
 
-  /**@name Miscellaneous */
-  //@{
+  /** @name Miscellaneous */
+  /// @{
     /** Get operating system specific thread identifier for this thread.
       * Note that the return value from these functions is only valid
       * if called by the owning thread. Calling this function for another
@@ -310,8 +297,8 @@ class PThread : public PObject
     /** User override function for the main execution routine of the thread. A
        descendent class must provide the code that will be executed in the
        thread within this function.
-       
-       Note that the correct way for a thread to terminate is to return from
+
+       NOTE that the correct way for a thread to terminate is to return from
        this function.
      */
     virtual void Main() = 0;
@@ -335,7 +322,7 @@ class PThread : public PObject
      */
     static void Yield();
 
-    /**Create a simple thread executing the specified notifier.
+    /** Create a simple thread executing the specified notifier.
        This creates a simple <code>PThread</code> class that automatically executes the
        function defined by the <code>PNotifier</code> in the context of a new thread.
       */
@@ -356,7 +343,7 @@ class PThread : public PObject
     {
         return Create(notifier, 0, NoAutoDeleteThread, NormalPriority, threadName);
     }
-  //@}
+  /// @}
 
     bool IsAutoDelete() const { return m_type == e_IsAutoDelete || m_type == e_IsExternal; }
 
